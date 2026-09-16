@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
 
         services.AddTransient<LookupVehicleHandler>();
+        services.AddTransient<SuggestClarifyingQuestionsHandler>();
         services.AddTransient<SubmitFaultTicketHandler>();
         services.AddTransient<ListTicketsHandler>();
         services.AddTransient<GetTicketDetailHandler>();

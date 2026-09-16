@@ -52,6 +52,17 @@ internal sealed class FakeTriageService : IFaultTriageService
     }
 }
 
+internal sealed class FakeClarifyingQuestionService : IClarifyingQuestionService
+{
+    public List<string> Questions { get; } = [];
+    public Exception? Throw { get; set; }
+
+    public Task<IReadOnlyList<string>> SuggestQuestionsAsync(VehicleDetails vehicle, string description, CancellationToken cancellationToken) =>
+        Throw is null
+            ? Task.FromResult<IReadOnlyList<string>>(Questions.ToList())
+            : Task.FromException<IReadOnlyList<string>>(Throw);
+}
+
 internal sealed class FakeEmbeddingService : IEmbeddingService
 {
     public string ModelId => "fake-embedding-v1";
