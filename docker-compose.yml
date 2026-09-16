@@ -1,13 +1,17 @@
+# One command brings up SQL Server 2025 and the app in demo mode (no AI keys needed):
+#   docker compose up --build
+# Optional overrides live in a git-ignored .env (copy .env.example): AI providers and keys, ports, SA password.
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2025-latest
-    container_name: faultdesk-sql
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env (copy .env.example)}"
+      # Demo-only default so the stack starts with no configuration. Override MSSQL_SA_PASSWORD in .env for anything else.
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-FaultDesk_Dev_Passw0rd!}"
       MSSQL_PID: Developer
     ports:
-      - "1433:1433"
+      - "${SQL_PORT:-1433}:1433"
     volumes:
       - mssql-data:/var/opt/mssql
     healthcheck:
@@ -20,14 +24,13 @@ services:
 
   app:
     build: .
-    container_name: faultdesk-app
     depends_on:
       sqlserver:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     environment:
-      ConnectionStrings__FaultDesk: "Server=sqlserver,1433;Database=FaultDesk;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+      ConnectionStrings__FaultDesk: "Server=sqlserver,1433;Database=FaultDesk;User Id=sa;Password=${MSSQL_SA_PASSWORD:-FaultDesk_Dev_Passw0rd!};Encrypt=True;TrustServerCertificate=True"
       # Mock by default so the stack runs with no API keys. Set the providers and keys in .env for the real thing.
       Ai__ChatProvider: "${AI_CHAT_PROVIDER:-Mock}"
       Ai__EmbeddingProvider: "${AI_EMBEDDING_PROVIDER:-Mock}"

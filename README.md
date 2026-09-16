@@ -16,6 +16,49 @@ Built for a technical assessment in .NET 10 / Blazor Server with a domain-driven
 Claude Code. See [docs/plan.md](docs/plan.md) for the plan the work followed and [docs](docs) for the ADRs, prompts and
 notes on how AI was used during development.
 
+## Run it in three steps (reviewers start here)
+
+You need Docker Desktop (Windows or macOS) or Docker Engine with the Compose plugin (Linux). Nothing else: no .NET SDK,
+no SQL Server, no API keys.
+
+```bash
+git clone <this repository> faultdesk && cd faultdesk
+```
+
+```bash
+docker compose up --build
+```
+
+Then open <http://localhost:8080>. The first run pulls the SQL Server 2025 and .NET images and builds the app (a few
+minutes); after that the database is created, migrated and seeded with 20 historical tickets automatically. The
+app runs in **demo mode**: every AI feature works with canned answers and hashed vectors, so the whole flow can be
+exercised end to end. Stop it with `Ctrl+C`, or `docker compose down` (`-v` as well to wipe the database).
+
+Suggested walk-through: **Customer** → pick a demo registration (e.g. `KX19 HWL`) → describe a fault → answer the
+questions → submit. Then **Garage** → open the new ticket: triage, this vehicle's history, similar faults with their
+fixes, **Investigate**, and the workflow buttons.
+
+Optional: copy `.env.example` to `.env` to change ports (`APP_PORT`, `SQL_PORT`), the demo database password, or to
+switch on real AI providers with your own keys (see [Configuring the AI providers](#configuring-the-ai-providers)).
+
+## Repository guide
+
+| Path | What it is |
+|---|---|
+| `src/FaultDesk.Domain` | Aggregates, value objects and invariants. No package references. |
+| `src/FaultDesk.Application` | Use-case handlers, ports (interfaces the outside world implements), DTOs, versioned prompt builders. |
+| `src/FaultDesk.Infrastructure` | EF Core + SQL Server 2025 persistence (vector column, migrations, seeding), AI adapters (Anthropic, OpenAI, Mock), mock registration lookup. |
+| `src/FaultDesk.Web` | Blazor Server UI (customer and garage areas) and the composition root. |
+| `tests/` | xUnit: domain invariants, handlers with hand-written fakes, prompt contents, the mock AI. |
+| `docs/plan.md` | The plan agreed before any code was written, kept verbatim; the commit history follows it. |
+| `docs/ai-workflow.md` | How Claude Code was used, who decided what, and every place the AI was wrong and how it was caught. |
+| `docs/adr/` | Architecture decision records: embedding storage, provider-agnostic AI, streamed markdown report. |
+| `docs/prompts/` | The three prompts (triage, clarify, investigate) mirrored from the code, with their version ids. |
+| `docs/screenshots/` | Desktop and tablet screenshots of every screen. |
+| `CLAUDE.md` | The working conventions given to Claude Code (layering rules, commands, "AI is best-effort", no secrets in source). |
+| `.claude/launch.json` | How Claude Code ran the app in its browser pane during development. |
+| `Dockerfile`, `docker-compose.yml`, `.env.example` | Deployment. Compose runs with no configuration; `.env` is optional. |
+
 ## Screenshots
 
 | Garage: ticket at a glance | Garage: tickets |
@@ -30,33 +73,23 @@ The visual language follows Klipboard's own site: brand pink `#ea0474` with its 
 Inter, 8px controls. The ticket page keeps the vehicle's history and similar faults in a sticky rail beside the
 description so nothing important needs scrolling; on tablets the rail moves between the triage and the report.
 
-## Quick start (Docker, no API keys needed)
+## Docker notes
 
-Prerequisites: Docker Desktop (or another Docker engine with Compose v2). On Apple Silicon the SQL Server 2025 image
-needs the CU1-or-later tag that `2025-latest` resolves to; if it fails to start, use OrbStack or a recent Docker Desktop.
-
-```bash
-cp .env.example .env
-docker compose up --build
-```
-
-Then open <http://localhost:8080>. The first run pulls the SQL Server 2025 and .NET images (roughly 2 GB), creates the
-database, applies the EF Core migrations and seeds 20 historical tickets so the garage portal has history from the start.
-
-Everything works in **demo mode** without keys: triage, follow-up questions and AI Investigate return realistic canned
-answers, and similarity search uses deterministic hashed vectors. To use real models, set the providers and keys in
-`.env` (see below) and run `docker compose up --build` again.
+The compose file has demo defaults for everything (SA password `FaultDesk_Dev_Passw0rd!`, ports 8080 and 1433, Mock AI),
+so it starts with no `.env`. The images are about 2 GB on first pull. On Apple Silicon the SQL Server 2025 image needs
+the CU1-or-later build that `2025-latest` resolves to; if the database container fails to start, update Docker Desktop
+or use OrbStack. `docker compose logs app` shows the start-up log (migrations, seeding, embedding backfill) and
+`docker compose ps` lists the two containers.
 
 ## Running for development
 
 ```bash
-cp .env.example .env                 # once
 docker compose up sqlserver -d       # SQL Server 2025 on localhost:1433
 dotnet run --project src/FaultDesk.Web
 ```
 
 The app is on <http://localhost:5276>. `appsettings.Development.json` points at the compose SQL Server using the
-default password from `.env.example`; change both if you change the password.
+default demo password; change both if you change the password in `.env`.
 
 Build and test:
 
