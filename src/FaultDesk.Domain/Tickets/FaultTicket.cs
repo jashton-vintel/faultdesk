@@ -72,6 +72,26 @@ public sealed class FaultTicket
         };
     }
 
+    /// <summary>
+    /// Creates a ticket with a known identity, reference and timestamp. For importing history (seed data,
+    /// migration from another system); customer submissions use <see cref="Create"/>.
+    /// </summary>
+    public static FaultTicket Import(
+        TicketId id,
+        string? reference,
+        VehicleRegistration registration,
+        VehicleDetails vehicle,
+        string? description,
+        string? customerName,
+        string? customerContact,
+        DateTimeOffset createdAt)
+    {
+        var ticket = Create(registration, vehicle, description, customerName, customerContact, createdAt);
+        ticket.Id = id;
+        ticket.Reference = Guard.Required(reference, "Reference", 20);
+        return ticket;
+    }
+
     public void ApplyTriage(TriageSummary triage, DateTimeOffset now)
     {
         Triage = triage ?? throw new ArgumentNullException(nameof(triage));

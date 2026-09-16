@@ -2,6 +2,7 @@ using FaultDesk.Application.Abstractions;
 using FaultDesk.Infrastructure.Ai;
 using FaultDesk.Infrastructure.Persistence;
 using FaultDesk.Infrastructure.Persistence.Repositories;
+using FaultDesk.Infrastructure.Persistence.Seed;
 using FaultDesk.Infrastructure.Vehicles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +31,8 @@ public static class DependencyInjection
 
         services.AddFaultDeskAi(configuration);
 
+        services.AddSingleton<TicketSeeder>();
+        services.AddSingleton<EmbeddingBackfiller>();
         services.AddHostedService<DatabaseInitializer>();
 
         return services;
