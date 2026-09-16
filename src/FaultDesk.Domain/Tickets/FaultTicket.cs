@@ -108,7 +108,7 @@ public sealed class FaultTicket
             throw new DomainException("Only resolved tickets can be reopened.");
         }
 
-        Resolution = null;
+        // The previous resolution is kept as history: it tells the workshop what was already tried.
         Status = TicketStatus.InProgress;
         UpdatedAt = now;
     }

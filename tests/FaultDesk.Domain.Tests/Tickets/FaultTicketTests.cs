@@ -107,7 +107,7 @@ public class FaultTicketTests
     }
 
     [Fact]
-    public void Reopen_returns_a_resolved_ticket_to_in_progress()
+    public void Reopen_returns_a_resolved_ticket_to_in_progress_and_keeps_the_last_resolution()
     {
         var ticket = NewTicket();
         ticket.Resolve("Loose heat shield, re-secured.", Now);
@@ -115,7 +115,7 @@ public class FaultTicketTests
         ticket.Reopen(Now.AddDays(2));
 
         Assert.Equal(TicketStatus.InProgress, ticket.Status);
-        Assert.Null(ticket.Resolution);
+        Assert.NotNull(ticket.Resolution);
         Assert.Throws<DomainException>(() => ticket.Reopen(Now.AddDays(3)));
     }
 }
