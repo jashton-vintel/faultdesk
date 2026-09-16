@@ -1,0 +1,107 @@
+@page "/garage/tickets/{Id:guid}"
+@inject GetTicketDetailHandler GetTicketDetail
+
+<PageTitle>@(_detail is null ? "Ticket" : _detail.Ticket.Reference) - FaultDesk</PageTitle>
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="garage">Tickets</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@(_detail?.Ticket.Reference ?? "...")</li>
+    </ol>
+</nav>
+
+@if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm"></span> Loading ticket...</div>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_detail is null)
+{
+    <div class="alert alert-warning">Ticket not found. <a href="garage">Back to tickets</a>.</div>
+}
+else
+{
+    var ticket = _detail.Ticket;
+
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1">@ticket.Headline</h1>
+            <div class="text-secondary">
+                <span class="font-monospace">@ticket.Reference</span> &middot; received @Display.LocalTime(ticket.CreatedAt)
+                @if (ticket.CustomerName is not null)
+                {
+                    <text> &middot; @ticket.CustomerName</text>
+                }
+                @if (ticket.CustomerContact is not null)
+                {
+                    <text> (@ticket.CustomerContact)</text>
+                }
+            </div>
+        </div>
+        <StatusBadge Status="ticket.Status" />
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="reg-plate px-2 py-1 rounded fs-5">@ticket.Registration.Display</span>
+                        <div>
+                            <div class="fw-semibold">@ticket.Vehicle.Year @ticket.Vehicle.Make @ticket.Vehicle.Model @ticket.Vehicle.Variant</div>
+                            <div class="small text-secondary">
+                                @(ticket.Vehicle.EngineSizeCc is { } cc ? $"{cc}cc" : "Engine size unknown") &middot; @Display.Fuel(ticket.Vehicle.FuelType)
+                            </div>
+                        </div>
+                    </div>
+                    <h2 class="h6 text-secondary text-uppercase">Customer's description</h2>
+                    <p class="mb-0" style="white-space: pre-line;">@ticket.Description</p>
+                </div>
+            </div>
+
+            @if (ticket.Resolution is { } resolution)
+            {
+                <div class="card shadow-sm mb-3 border-success">
+                    <div class="card-body">
+                        <h2 class="h6 text-success text-uppercase">Resolution &middot; @Display.LocalTime(resolution.ResolvedAt)</h2>
+                        <p class="mb-0" style="white-space: pre-line;">@resolution.Notes</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-5">
+            <RelatedTickets History="_detail.VehicleHistory" Similar="_detail.SimilarTickets" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TicketDetail? _detail;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _detail = await GetTicketDetail.HandleAsync(new TicketId(Id), CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not load the ticket: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

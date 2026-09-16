@@ -1,0 +1,75 @@
+@* Previous tickets that matter for this one: the same vehicle's history and semantically similar faults from any vehicle. *@
+
+<div class="card shadow-sm h-100">
+    <div class="card-body">
+        <h2 class="h5">This vehicle's history</h2>
+        @if (History.Count == 0)
+        {
+            <p class="text-secondary small mb-0">No previous tickets for this registration.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var item in History)
+                {
+                    <li class="border-top py-2">
+                        @RenderItem(item)
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm h-100 mt-3">
+    <div class="card-body">
+        <h2 class="h5">Similar faults we've seen</h2>
+        <p class="text-secondary small">Found by comparing the meaning of the descriptions (vector search), not just the words.</p>
+        @if (Similar.Count == 0)
+        {
+            <p class="text-secondary small mb-0">Nothing similar yet. Similar tickets appear here as the garage builds up history.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var item in Similar)
+                {
+                    <li class="border-top py-2">
+                        @RenderItem(item)
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RelatedTicket> History { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RelatedTicket> Similar { get; set; } = [];
+
+    private RenderFragment RenderItem(RelatedTicket item) => __builder =>
+    {
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+                <a href="garage/tickets/@item.Id.Value" class="fw-semibold">@item.Headline</a>
+                <div class="small text-secondary">
+                    <span class="font-monospace">@item.Reference</span> &middot; @item.Registration &middot; @item.Vehicle &middot; @item.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+                </div>
+            </div>
+            <div class="text-nowrap">
+                @if (item.Similarity is { } similarity)
+                {
+                    <span class="badge bg-info text-dark me-1" title="Cosine similarity of the two descriptions">@similarity.ToString("P0") match</span>
+                }
+                <StatusBadge Status="item.Status" />
+            </div>
+        </div>
+        @if (item.ResolutionNotes is not null)
+        {
+            <div class="small mt-1"><span class="text-success fw-semibold">Fixed by:</span> @item.ResolutionNotes</div>
+        }
+    };
+}

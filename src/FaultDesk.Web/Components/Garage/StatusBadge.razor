@@ -1,0 +1,6 @@
+<span class="badge bg-@Display.StatusColour(Status)">@Display.Status(Status)</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public TicketStatus Status { get; set; }
+}
