@@ -37,10 +37,7 @@
         else if (Latest is { } latest)
         {
             <div class="report-markdown">@Markdown.ToHtml(latest.ReportMarkdown)</div>
-            <div class="small text-secondary border-top pt-2 mt-3">
-                Generated @Display.LocalTime(latest.CreatedAt) by <span class="font-monospace">@latest.Metadata.Model</span>
-                (prompt @latest.Metadata.PromptVersion)@(latest.Metadata.WebSearchUsed ? ", with web search" : ", without web search").
-            </div>
+            <div class="small text-secondary border-top pt-2 mt-3">@Provenance(latest)</div>
         }
         else
         {
@@ -54,7 +51,7 @@
                 <ul class="small mb-0 mt-2">
                     @foreach (var run in _history.Skip(1))
                     {
-                        <li>@Display.LocalTime(run.CreatedAt) &middot; <span class="font-monospace">@run.Metadata.Model</span> &middot; prompt @run.Metadata.PromptVersion</li>
+                        <li>@Provenance(run)</li>
                     }
                 </ul>
             </details>
@@ -81,6 +78,17 @@
     private Stopwatch? _stopwatch;
 
     private Investigation? Latest => _history.Count > 0 ? _history[0] : null;
+
+    /// <summary>Who produced this report and what it cost: provider/model, prompt version, tokens, wall time, web search.</summary>
+    private static string Provenance(Investigation run)
+    {
+        var m = run.Metadata;
+        var tokens = m.InputTokens is null && m.OutputTokens is null
+            ? "token usage not reported"
+            : $"{m.InputTokens?.ToString("N0") ?? "?"} in / {m.OutputTokens?.ToString("N0") ?? "?"} out tokens";
+
+        return $"{Display.LocalTime(run.CreatedAt)} · {m.Provider} {m.Model} · prompt {m.PromptVersion} · {tokens} · {m.Duration.TotalSeconds:F1}s · {(m.WebSearchUsed ? "with" : "without")} web search";
+    }
 
     protected override void OnParametersSet()
     {
