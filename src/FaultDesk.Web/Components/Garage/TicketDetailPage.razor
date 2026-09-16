@@ -62,6 +62,11 @@ else
                 </div>
             </div>
 
+            @if (ticket.Triage is { } triage)
+            {
+                <TriageCard Triage="triage" />
+            }
+
             @if (ticket.Resolution is { } resolution)
             {
                 <div class="card shadow-sm mb-3 border-success">

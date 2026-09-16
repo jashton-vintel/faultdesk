@@ -21,6 +21,31 @@ else
         </p>
     </div>
 
+    @if (_ticket.Triage is { } triage)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h5">What we understood</h2>
+                @if (!string.IsNullOrWhiteSpace(triage.CustomerSummary))
+                {
+                    <p>@triage.CustomerSummary</p>
+                }
+                <p class="mb-0">
+                    <span class="badge bg-@Display.SafeToDriveColour(triage.SafeToDrive) me-1">@Display.SafeToDrive(triage.SafeToDrive)</span>
+                    <span class="small text-secondary">
+                        @(triage.SafeToDrive switch
+                        {
+                            SafeToDrive.No => "Please don't drive the car until it has been checked; we'll call you to arrange recovery or a priority booking.",
+                            SafeToDrive.Caution => "Keep journeys short and gentle until we've looked at it. If it gets worse, stop driving and call us.",
+                            SafeToDrive.Yes => "Nothing in your description suggests it's unsafe to drive, but do get it looked at soon.",
+                            _ => "We'll assess how urgent this is when we review your report.",
+                        })
+                    </span>
+                </p>
+            </div>
+        </div>
+    }
+
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <h2 class="h5">What you told us</h2>
