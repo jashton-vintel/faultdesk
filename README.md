@@ -16,6 +16,20 @@ Built for a technical assessment in .NET 10 / Blazor Server with a domain-driven
 Claude Code. See [docs/plan.md](docs/plan.md) for the plan the work followed and [docs](docs) for the ADRs, prompts and
 notes on how AI was used during development.
 
+## Screenshots
+
+| Garage: ticket at a glance | Garage: tickets |
+|---|---|
+| ![Ticket page](docs/screenshots/garage-ticket.png) | ![Ticket grid](docs/screenshots/garage-tickets.png) |
+
+| Customer: report a problem | Customer: confirmation |
+|---|---|
+| ![Report form](docs/screenshots/customer-report.png) | ![Confirmation](docs/screenshots/customer-submitted.png) |
+
+The visual language follows Klipboard's own site: brand pink `#ea0474` with its tints, near-black `#191919` headings,
+Inter, 8px controls. The ticket page keeps the vehicle's history and similar faults in a sticky rail beside the
+description so nothing important needs scrolling; on tablets the rail moves between the triage and the report.
+
 ## Quick start (Docker, no API keys needed)
 
 Prerequisites: Docker Desktop (or another Docker engine with Compose v2). On Apple Silicon the SQL Server 2025 image

@@ -45,6 +45,16 @@ Listing these is the point of the exercise: the value of AI in the loop comes wi
 | Garage portal | A Razor component named `TicketDetail` shadowed the Application DTO of the same name | Compiler errors | Renamed the page component |
 | Docker | The published container served no `_framework/blazor.web.js` (404), so the page was blank | Browser network log, then inspecting the build stage: the framework-assets package was never restored | Restore had run from csproj files alone, before the `.razor` sources were copied, so the SDK did not treat it as a Blazor project; the Dockerfile now restores with the full source present |
 | Demo mode | A flashing engine light was filed under Electrical by the mock | Walking the demo flow in the browser | A dedicated engine-management rule |
+| UI redesign | First pass put the workflow buttons under the header text, and below the desktop breakpoint the related-tickets rail fell to the bottom of the page under the report | Screenshots at 1400px and 820px (headless Playwright, because the in-app pane would not draw) | Header became a two-column grid; the ticket body became a CSS grid whose rail spans both rows on desktop and sits between triage and report on tablets |
+
+## The redesign pass
+
+The first version of the UI was functional and plain. The second pass took the palette and type directly from
+klipboard.com rather than guessing: Claude Code opened the site in its browser, read the CSS custom properties and
+computed styles (`--brand-colors--100-base: #ea0474`, `--neutrals--black: #191919`, Inter, 8px radius) and turned them
+into `wwwroot/app.css` design tokens layered over Bootstrap's own CSS variables. Every screen was then screenshotted at
+desktop and tablet widths and the layout adjusted until the ticket page showed the description, triage and related
+tickets without scrolling.
 
 Nothing in the table was found by a unit test; all of it was found by running the real thing. The unit tests
 protect the domain rules, the handlers' best-effort behaviour and the prompt contents.
