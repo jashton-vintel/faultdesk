@@ -1,4 +1,5 @@
 using FaultDesk.Application.Abstractions;
+using FaultDesk.Infrastructure.Ai;
 using FaultDesk.Infrastructure.Persistence;
 using FaultDesk.Infrastructure.Persistence.Repositories;
 using FaultDesk.Infrastructure.Vehicles;
@@ -26,6 +27,8 @@ public static class DependencyInjection
         services.AddSingleton<ITicketEmbeddingStore, EfTicketEmbeddingStore>();
         services.AddSingleton<ISimilarTicketFinder, SqlSimilarTicketFinder>();
         services.AddSingleton<IVehicleLookupService, MockVehicleLookupService>();
+
+        services.AddFaultDeskAi(configuration);
 
         services.AddHostedService<DatabaseInitializer>();
 

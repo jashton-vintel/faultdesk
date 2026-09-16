@@ -1,3 +1,4 @@
+using FaultDesk.Application;
 using FaultDesk.Infrastructure;
 using FaultDesk.Web.Components;
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddFaultDeskApplication();
 builder.Services.AddFaultDeskInfrastructure(builder.Configuration);
 
 var app = builder.Build();
