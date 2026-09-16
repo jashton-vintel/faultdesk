@@ -22,7 +22,7 @@ You need Docker Desktop (Windows or macOS) or Docker Engine with the Compose plu
 no SQL Server, no API keys.
 
 ```bash
-git clone <this repository> faultdesk && cd faultdesk
+git clone https://github.com/jashton-vintel/faultdesk.git && cd faultdesk
 ```
 
 ```bash
