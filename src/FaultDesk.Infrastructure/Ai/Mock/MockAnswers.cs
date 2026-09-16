@@ -16,6 +16,7 @@ internal static class MockAnswers
     private static readonly Rule[] Rules =
     [
         new(["brake", "braking", "pedal", "stopping", "handbrake"], "Brakes", "front brakes", "worn front brake pads and discs", "High", "Caution"),
+        new(["engine light", "management light", "cuts out", "cutting out", "cut out", "misfire", "stall"], "Engine", "engine management and ignition", "a misfire from a failing ignition coil or injector", "High", "Caution"),
         new(["steer", "wobble", "pull", "knock", "rattle", "clunk", "bump", "suspension", "creak"], "SteeringSuspension", "front suspension", "worn anti-roll bar drop links or bushes", "Medium", "Caution"),
         new(["overheat", "coolant", "temperature", "steam", "fan"], "Cooling", "cooling system", "a coolant leak or a stuck thermostat", "High", "No"),
         new(["smoke", "exhaust", "emission", "dpf", "adblue", "smell"], "ExhaustEmissions", "exhaust and after-treatment system", "a blocked DPF or an exhaust leak", "Medium", "Caution"),
