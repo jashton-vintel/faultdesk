@@ -29,7 +29,10 @@
             <div class="card-body">
                 <label class="form-label" for="registration">Registration number</label>
                 <div class="input-group input-group-lg mb-2">
-                    <input id="registration" class="form-control reg-plate text-uppercase" placeholder="AB12 CDE" maxlength="9"
+                    @* autocomplete/data-* hints stop browsers and password managers (LastPass, 1Password, Bitwarden, Dashlane) filling this with an email. *@
+                    <input id="registration" name="vehicle-registration-mark" class="form-control reg-plate text-uppercase" placeholder="AB12 CDE" maxlength="9"
+                           autocomplete="off" autocapitalize="characters" spellcheck="false"
+                           data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
                            @bind="_registrationInput" @bind:event="oninput" @onkeydown="OnRegistrationKeyDown" disabled="@_busy" />
                     <button type="button" class="btn btn-primary" @onclick="LookupAsync" disabled="@_busy">
                         @(_busy ? "Looking up..." : "Find my vehicle")
@@ -63,17 +66,17 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label" for="make">Make</label>
-                            <InputText id="make" class="form-control" @bind-Value="_vehicle.Make" />
+                            <InputText id="make" class="form-control" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @bind-Value="_vehicle.Make" />
                             <ValidationMessage For="() => _vehicle.Make" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="model">Model</label>
-                            <InputText id="model" class="form-control" @bind-Value="_vehicle.Model" />
+                            <InputText id="model" class="form-control" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @bind-Value="_vehicle.Model" />
                             <ValidationMessage For="() => _vehicle.Model" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="variant">Variant <span class="text-secondary">(optional)</span></label>
-                            <InputText id="variant" class="form-control" @bind-Value="_vehicle.Variant" placeholder="e.g. 1.5 TDCi Zetec" />
+                            <InputText id="variant" class="form-control" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @bind-Value="_vehicle.Variant" placeholder="e.g. 1.5 TDCi Zetec" />
                             <ValidationMessage For="() => _vehicle.Variant" />
                         </div>
                         <div class="col-md-4">
@@ -97,11 +100,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="name">Your name <span class="text-secondary">(optional)</span></label>
-                            <InputText id="name" class="form-control" @bind-Value="_vehicle.CustomerName" />
+                            <InputText id="name" class="form-control" autocomplete="name" @bind-Value="_vehicle.CustomerName" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="contact">Phone or email <span class="text-secondary">(optional)</span></label>
-                            <InputText id="contact" class="form-control" @bind-Value="_vehicle.CustomerContact" />
+                            <InputText id="contact" class="form-control" autocomplete="email" @bind-Value="_vehicle.CustomerContact" />
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-4">
