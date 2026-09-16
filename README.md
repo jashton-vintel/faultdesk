@@ -114,8 +114,33 @@ Key design decisions are recorded as ADRs in [docs/adr](docs/adr).
 
 Prompt text lives in `src/FaultDesk.Application/Prompts` with a version constant that is stored alongside every output.
 
+## How AI was used to build it
+
+[docs/ai-workflow.md](docs/ai-workflow.md) describes the split between the candidate's decisions and Claude Code's
+research, code and verification, and lists the places the AI got it wrong and how each was caught. The commit history
+follows the plan in [docs/plan.md](docs/plan.md) one increment at a time; the ADRs are in [docs/adr](docs/adr) and the
+prompts in [docs/prompts](docs/prompts).
+
 ## Trade-offs and what is not done
 
-See the end of this file once the final documentation commit lands; the short version: no authentication (two areas in
-one app), a mock registration lookup instead of the DVLA API, no integration tests against SQL Server, and the demo
-embeddings are lexical rather than semantic.
+Deliberate scope decisions for a one-evening build, in the order a reviewer is most likely to notice them:
+
+- **No authentication.** Customer and garage areas live in one Blazor app; in production they would be separate
+  deployables or at least separate authorisation policies.
+- **Mock registration lookup.** Ten known registrations, everything else goes to manual entry. A DVLA Vehicle Enquiry
+  Service adapter would sit behind `IVehicleLookupService` without touching anything else.
+- **Demo embeddings are lexical.** The zero-key mode hashes words and bigrams, so "similar" means shared vocabulary.
+  Real embeddings (`Ai:EmbeddingProvider=OpenAI`) are semantic; switching re-embeds every ticket on the next start.
+- **Sources are the model's own list.** The investigation prompt demands a `## Sources` section with URLs; the
+  provider's citation blocks are not parsed. Suggestions are a starting point for a technician and the UI says so.
+- **No integration tests against SQL Server.** The vector column, `VECTOR_DISTANCE` query and migrations were verified
+  by running the app against the container; a Testcontainers-based test is the obvious next addition.
+- **Exact vector search.** With a few thousand tickets a full `VECTOR_DISTANCE` scan is fine; a DiskANN vector index
+  would be the step after that.
+- **No cost controls.** Every submission calls the model twice (questions, triage) and every investigation once with
+  web search; investigations are persisted so re-running is a choice, but there is no rate limiting or budget.
+- **Single time zone.** Times are shown in the server's local time (UTC inside the container).
+- **Anthropic's refusal-fallback beta is not enabled** because requests go through the Microsoft.Extensions.AI adapter
+  rather than the raw messages API (see ADR-0002).
+
+Everything in the plan was implemented; the items above are the edges that were consciously left rough.
