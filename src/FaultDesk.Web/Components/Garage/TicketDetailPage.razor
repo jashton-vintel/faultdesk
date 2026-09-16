@@ -81,6 +81,7 @@ else
         </div>
 
         <div class="col-lg-5">
+            <StatusActions Ticket="ticket" OnChanged="LoadAsync" />
             <RelatedTickets History="_detail.VehicleHistory" Similar="_detail.SimilarTickets" />
         </div>
     </div>
@@ -94,9 +95,11 @@ else
     private bool _loading = true;
     private string? _error;
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
     {
-        _loading = true;
+        _loading = _detail is null;
         _error = null;
         try
         {

@@ -1,0 +1,91 @@
+@inject TicketWorkflowHandler Workflow
+@inject ILogger<StatusActions> Logger
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h5">Workflow</h2>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-danger py-2">@_error</div>
+        }
+
+        @if (_resolving)
+        {
+            <label class="form-label" for="resolution-notes">What did the workshop find and do?</label>
+            <textarea id="resolution-notes" class="form-control mb-2" rows="4" @bind="_notes" disabled="@_busy"
+                      placeholder="e.g. Front discs lipped and pads worn to the metal. Replaced discs and pads, bled brakes, road tested."></textarea>
+            <div class="form-text mb-2">These notes are embedded with the ticket, so the next similar fault will surface this fix.</div>
+            <button type="button" class="btn btn-success btn-sm" @onclick="ResolveAsync" disabled="@_busy">@(_busy ? "Saving..." : "Save resolution")</button>
+            <button type="button" class="btn btn-link btn-sm" @onclick="() => _resolving = false" disabled="@_busy">Cancel</button>
+        }
+        else
+        {
+            switch (Ticket.Status)
+            {
+                case TicketStatus.New:
+                    <p class="small text-secondary">New ticket. Start work once the car is booked in, or resolve it straight away.</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm" @onclick="StartAsync" disabled="@_busy">Start work</button>
+                    <button type="button" class="btn btn-outline-success btn-sm ms-1" @onclick="() => _resolving = true" disabled="@_busy">Resolve</button>
+                    break;
+                case TicketStatus.InProgress:
+                    <p class="small text-secondary">Work in progress. Record what fixed it when you are done.</p>
+                    <button type="button" class="btn btn-success btn-sm" @onclick="() => _resolving = true" disabled="@_busy">Resolve</button>
+                    break;
+                case TicketStatus.Resolved:
+                    <p class="small text-secondary">Resolved. Reopen if the customer comes back with the same problem.</p>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ReopenAsync" disabled="@_busy">Reopen</button>
+                    break;
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FaultTicket Ticket { get; set; } = null!;
+
+    /// <summary>Raised after a successful change so the page can reload the ticket and its related data.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private bool _busy;
+    private bool _resolving;
+    private string _notes = string.Empty;
+    private string? _error;
+
+    private Task StartAsync() => ChangeAsync(ct => Workflow.StartAsync(Ticket.Id, ct));
+
+    private Task ReopenAsync() => ChangeAsync(ct => Workflow.ReopenAsync(Ticket.Id, ct));
+
+    private Task ResolveAsync() => ChangeAsync(async ct =>
+    {
+        await Workflow.ResolveAsync(Ticket.Id, _notes, ct);
+        _resolving = false;
+        _notes = string.Empty;
+    });
+
+    private async Task ChangeAsync(Func<CancellationToken, Task> change)
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            await change(CancellationToken.None);
+            await OnChanged.InvokeAsync();
+        }
+        catch (DomainException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Workflow change failed for ticket {TicketId}", Ticket.Id);
+            _error = $"Could not update the ticket: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
