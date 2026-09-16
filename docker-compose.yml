@@ -18,5 +18,21 @@ services:
       retries: 12
       start_period: 40s
 
+  app:
+    build: .
+    container_name: faultdesk-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__FaultDesk: "Server=sqlserver,1433;Database=FaultDesk;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+      # Mock by default so the stack runs with no API keys. Set the providers and keys in .env for the real thing.
+      Ai__ChatProvider: "${AI_CHAT_PROVIDER:-Mock}"
+      Ai__EmbeddingProvider: "${AI_EMBEDDING_PROVIDER:-Mock}"
+      Ai__Anthropic__ApiKey: "${ANTHROPIC_API_KEY:-}"
+      Ai__OpenAI__ApiKey: "${OPENAI_API_KEY:-}"
+
 volumes:
   mssql-data:
