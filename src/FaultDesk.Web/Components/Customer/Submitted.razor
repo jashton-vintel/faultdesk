@@ -1,0 +1,54 @@
+@page "/customer/submitted/{Id:guid}"
+@inject GetTicketDetailHandler GetTicketDetail
+
+<PageTitle>Report received - FaultDesk</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm"></span> Loading your report...</div>
+}
+else if (_ticket is null)
+{
+    <div class="alert alert-warning">We couldn't find that report. <a href="customer/report">Start again</a>.</div>
+}
+else
+{
+    <div class="alert alert-success shadow-sm">
+        <h1 class="h4">Thanks, we've got it</h1>
+        <p class="mb-0">
+            Your reference is <strong class="font-monospace">@_ticket.Reference</strong>. A service adviser will review your report
+            and get in touch to book the car in.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h5">What you told us</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Vehicle</dt>
+                <dd class="col-sm-9"><span class="font-monospace">@_ticket.Registration.Display</span> &middot; @_ticket.Vehicle.Summary</dd>
+                <dt class="col-sm-3">Problem</dt>
+                <dd class="col-sm-9" style="white-space: pre-line;">@_ticket.Description</dd>
+                <dt class="col-sm-3">Received</dt>
+                <dd class="col-sm-9">@_ticket.CreatedAt.ToLocalTime().ToString("d MMM yyyy HH:mm")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <a class="btn btn-outline-primary" href="customer/report">Report another problem</a>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _loading = true;
+    private FaultTicket? _ticket;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var detail = await GetTicketDetail.HandleAsync(new TicketId(Id), CancellationToken.None);
+        _ticket = detail?.Ticket;
+        _loading = false;
+    }
+}

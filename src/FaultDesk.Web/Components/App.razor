@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -11,13 +11,21 @@
     <link rel="stylesheet" href="@Assets["FaultDesk.Web.styles.css"]" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
+    <HeadOutlet @rendermode="RenderModes.Server" />
 </head>
 
 <body>
-    <Routes />
+    @* Interactive server everywhere, without prerendering: components initialise once and AI work only ever starts from a user action. *@
+    <Routes @rendermode="RenderModes.Server" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 
 </html>
+
+@code {
+    private static class RenderModes
+    {
+        public static readonly InteractiveServerRenderMode Server = new(prerender: false);
+    }
+}

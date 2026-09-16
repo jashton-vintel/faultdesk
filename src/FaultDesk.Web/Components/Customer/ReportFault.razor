@@ -1,0 +1,266 @@
+@page "/customer/report"
+@inject LookupVehicleHandler LookupVehicle
+@inject SubmitFaultTicketHandler SubmitFaultTicket
+@inject NavigationManager Navigation
+@inject ILogger<ReportFault> Logger
+
+<PageTitle>Report a problem - FaultDesk</PageTitle>
+
+<h1 class="h3 mb-3">Report a problem with your car</h1>
+
+<ol class="stepper mb-4">
+    <li class="@StepClass(Step.Registration)">1. Your registration</li>
+    <li class="@StepClass(Step.Vehicle)">2. Your vehicle</li>
+    <li class="@StepClass(Step.Problem)">3. The problem</li>
+</ol>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+
+@switch (_step)
+{
+    case Step.Registration:
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <label class="form-label" for="registration">Registration number</label>
+                <div class="input-group input-group-lg mb-2">
+                    <input id="registration" class="form-control reg-plate text-uppercase" placeholder="AB12 CDE" maxlength="9"
+                           @bind="_registrationInput" @bind:event="oninput" @onkeydown="OnRegistrationKeyDown" disabled="@_busy" />
+                    <button type="button" class="btn btn-primary" @onclick="LookupAsync" disabled="@_busy">
+                        @(_busy ? "Looking up..." : "Find my vehicle")
+                    </button>
+                </div>
+                <div class="form-text mb-3">
+                    We'll try to find your vehicle automatically. You can always
+                    <button type="button" class="btn btn-link p-0 align-baseline" @onclick="EnterManually" disabled="@_busy">enter the details yourself</button>.
+                </div>
+
+                @if (LookupVehicle.SampleRegistrations.Count > 0)
+                {
+                    <p class="small text-secondary mb-1">Demo registrations the lookup knows about (any other registration goes to manual entry):</p>
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach (var sample in LookupVehicle.SampleRegistrations)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" @onclick="() => UseSample(sample)" disabled="@_busy">@sample.Display</button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        break;
+
+    case Step.Vehicle:
+        <EditForm Model="_vehicle" OnValidSubmit="ContinueToProblem">
+            <DataAnnotationsValidator />
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="alert @(_foundVehicle ? "alert-success" : "alert-warning") py-2">@_lookupMessage</div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="make">Make</label>
+                            <InputText id="make" class="form-control" @bind-Value="_vehicle.Make" />
+                            <ValidationMessage For="() => _vehicle.Make" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="model">Model</label>
+                            <InputText id="model" class="form-control" @bind-Value="_vehicle.Model" />
+                            <ValidationMessage For="() => _vehicle.Model" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="variant">Variant <span class="text-secondary">(optional)</span></label>
+                            <InputText id="variant" class="form-control" @bind-Value="_vehicle.Variant" placeholder="e.g. 1.5 TDCi Zetec" />
+                            <ValidationMessage For="() => _vehicle.Variant" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="year">Year</label>
+                            <InputNumber id="year" class="form-control" @bind-Value="_vehicle.Year" />
+                            <ValidationMessage For="() => _vehicle.Year" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="engine">Engine size (cc) <span class="text-secondary">(optional)</span></label>
+                            <InputNumber id="engine" class="form-control" @bind-Value="_vehicle.EngineSizeCc" placeholder="e.g. 1598" />
+                            <ValidationMessage For="() => _vehicle.EngineSizeCc" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="fuel">Fuel</label>
+                            <InputSelect id="fuel" class="form-select" @bind-Value="_vehicle.FuelType">
+                                @foreach (var fuel in Enum.GetValues<FuelType>())
+                                {
+                                    <option value="@fuel">@FuelLabel(fuel)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="name">Your name <span class="text-secondary">(optional)</span></label>
+                            <InputText id="name" class="form-control" @bind-Value="_vehicle.CustomerName" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="contact">Phone or email <span class="text-secondary">(optional)</span></label>
+                            <InputText id="contact" class="form-control" @bind-Value="_vehicle.CustomerContact" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-link" @onclick="BackToRegistration">Back</button>
+                        <button type="submit" class="btn btn-primary">Continue</button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+        break;
+
+    case Step.Problem:
+        <EditForm Model="_problem" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <p class="text-secondary mb-3"><span class="font-monospace">@_registration?.Display</span> &middot; @_vehicle.Summary</p>
+                    <label class="form-label" for="description">What's the problem?</label>
+                    <InputTextArea id="description" class="form-control" rows="7" @bind-Value="_problem.Description"
+                                   placeholder="Describe what you see, hear, feel or smell, and when it happens." disabled="@_busy" />
+                    <ValidationMessage For="() => _problem.Description" />
+                    <div class="form-text">
+                        Helpful details: when it happens (cold start, braking, turning, over bumps), any noises, smells or
+                        warning lights, and how long it has been going on.
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-link" @onclick="() => _step = Step.Vehicle" disabled="@_busy">Back</button>
+                        <button type="submit" class="btn btn-primary" disabled="@_busy">@(_busy ? "Sending to the garage..." : "Submit to the garage")</button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+        break;
+}
+
+@code {
+    private enum Step { Registration, Vehicle, Problem }
+
+    private Step _step = Step.Registration;
+    private string _registrationInput = string.Empty;
+    private VehicleRegistration? _registration;
+    private bool _foundVehicle;
+    private string _lookupMessage = string.Empty;
+    private readonly VehicleForm _vehicle = new();
+    private readonly ProblemForm _problem = new();
+    private bool _busy;
+    private string? _error;
+
+    private string StepClass(Step step) => step == _step ? "active" : step < _step ? "done" : string.Empty;
+
+    private static string FuelLabel(FuelType fuel) => fuel switch
+    {
+        FuelType.Unknown => "Not sure",
+        FuelType.PlugInHybrid => "Plug-in hybrid",
+        FuelType.Lpg => "LPG",
+        _ => fuel.ToString(),
+    };
+
+    private Task OnRegistrationKeyDown(KeyboardEventArgs e) => e.Key == "Enter" ? LookupAsync() : Task.CompletedTask;
+
+    private Task UseSample(VehicleRegistration sample)
+    {
+        _registrationInput = sample.Display;
+        return LookupAsync();
+    }
+
+    private async Task LookupAsync()
+    {
+        _error = null;
+        if (!VehicleRegistration.TryParse(_registrationInput, out var registration, out var validationError))
+        {
+            _error = validationError;
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var result = await LookupVehicle.HandleAsync(_registrationInput, CancellationToken.None);
+            _registration = result.Registration;
+            _foundVehicle = result.Found;
+
+            if (result.Vehicle is { } vehicle)
+            {
+                _vehicle.Apply(vehicle);
+                _lookupMessage = $"We found {registration.Display}: {vehicle.Summary}. Check the details and change anything that's wrong.";
+            }
+            else
+            {
+                _vehicle.ClearVehicle();
+                _lookupMessage = $"We couldn't find {registration.Display}. Please enter your vehicle details.";
+            }
+
+            _step = Step.Vehicle;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Vehicle lookup failed for {Registration}", registration.Value);
+            _error = "Sorry, the vehicle lookup isn't available right now. Please enter the details yourself.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void EnterManually()
+    {
+        _error = null;
+        if (!VehicleRegistration.TryParse(_registrationInput, out var registration, out var validationError))
+        {
+            _error = validationError;
+            return;
+        }
+
+        _registration = registration;
+        _foundVehicle = false;
+        _vehicle.ClearVehicle();
+        _lookupMessage = $"Enter the details for {registration.Display}.";
+        _step = Step.Vehicle;
+    }
+
+    private void BackToRegistration()
+    {
+        _error = null;
+        _step = Step.Registration;
+    }
+
+    private void ContinueToProblem()
+    {
+        _error = null;
+        _step = Step.Problem;
+    }
+
+    private async Task SubmitAsync()
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            var command = new SubmitFaultTicketCommand(
+                _registration!.Value,
+                _vehicle.ToInput(),
+                _problem.Description,
+                _vehicle.CustomerName,
+                _vehicle.CustomerContact);
+
+            var result = await SubmitFaultTicket.HandleAsync(command, CancellationToken.None);
+            Navigation.NavigateTo($"customer/submitted/{result.TicketId.Value}");
+        }
+        catch (DomainException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Submitting a fault ticket failed");
+            _error = "Sorry, something went wrong sending your report. Please try again in a moment.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

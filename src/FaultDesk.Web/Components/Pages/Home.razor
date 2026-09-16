@@ -1,7 +1,35 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>FaultDesk</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="text-center my-5">
+    <h1 class="display-5 fw-semibold">FaultDesk</h1>
+    <p class="lead text-secondary mb-0">Turns "it makes a funny noise" into something the workshop can act on.</p>
+</div>
 
-Welcome to your new app.
+<div class="row g-4 justify-content-center">
+    <div class="col-md-5">
+        <div class="card h-100 shadow-sm portal-card">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h4">I'm a customer</h2>
+                <p class="text-secondary flex-grow-1">
+                    Tell us your registration and describe the problem in your own words. We'll find your vehicle and pass
+                    everything to the garage.
+                </p>
+                <a class="btn btn-primary" href="customer/report">Report a problem</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card h-100 shadow-sm portal-card">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h4">Garage portal</h2>
+                <p class="text-secondary flex-grow-1">
+                    Every ticket in one place, with the vehicle's history, similar faults the workshop has seen before and an
+                    AI-generated investigation plan.
+                </p>
+                <a class="btn btn-outline-dark" href="garage">Open the garage portal</a>
+            </div>
+        </div>
+    </div>
+</div>
