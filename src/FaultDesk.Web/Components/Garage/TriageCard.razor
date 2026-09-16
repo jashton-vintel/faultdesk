@@ -1,53 +1,48 @@
-@* The AI's structured reading of the customer's words, for the service adviser. Extracted, not diagnosed. *@
+@* The AI's structured reading of the customer's words. Extracted, not diagnosed. *@
 
-<div class="card shadow-sm mb-3">
+<div class="card mb-3">
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h2 class="h5 mb-0">AI triage</h2>
-            <div class="d-flex gap-1">
-                <span class="badge bg-secondary">@Display.Category(Triage.Category)</span>
-                <SeverityBadge Severity="Triage.Severity" />
-                <span class="badge bg-@Display.SafeToDriveColour(Triage.SafeToDrive)">@Display.SafeToDrive(Triage.SafeToDrive)</span>
+            <div class="section-label pink">AI triage</div>
+            <span class="small text-secondary">extracted from the description, not verified</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                @if (Triage.Symptoms.Length > 0)
+                {
+                    <div class="section-label mb-1">Symptoms</div>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        @foreach (var symptom in Triage.Symptoms)
+                        {
+                            <span class="symptom">@symptom</span>
+                        }
+                    </div>
+                }
+
+                @if (Triage.LikelySystems.Length > 0)
+                {
+                    <div class="section-label mb-1">Systems mentioned</div>
+                    <div>@string.Join(", ", Triage.LikelySystems)</div>
+                }
+            </div>
+            <div class="col-md-6">
+                @if (Triage.AdviserQuestions.Length > 0)
+                {
+                    <div class="section-label mb-1">Ask the customer</div>
+                    <ul class="mb-0 ps-3">
+                        @foreach (var question in Triage.AdviserQuestions)
+                        {
+                            <li class="mb-1">@question</li>
+                        }
+                    </ul>
+                }
             </div>
         </div>
 
-        @if (Triage.Symptoms.Length > 0)
-        {
-            <div class="mb-2">
-                <span class="small text-secondary text-uppercase">Symptoms</span>
-                <div class="d-flex flex-wrap gap-1 mt-1">
-                    @foreach (var symptom in Triage.Symptoms)
-                    {
-                        <span class="badge rounded-pill text-bg-light border">@symptom</span>
-                    }
-                </div>
-            </div>
-        }
-
-        @if (Triage.LikelySystems.Length > 0)
-        {
-            <div class="mb-2">
-                <span class="small text-secondary text-uppercase">Systems mentioned</span>
-                <div>@string.Join(", ", Triage.LikelySystems)</div>
-            </div>
-        }
-
-        @if (Triage.AdviserQuestions.Length > 0)
-        {
-            <div class="mb-2">
-                <span class="small text-secondary text-uppercase">Ask the customer</span>
-                <ul class="mb-0 mt-1">
-                    @foreach (var question in Triage.AdviserQuestions)
-                    {
-                        <li>@question</li>
-                    }
-                </ul>
-            </div>
-        }
-
         @if (!string.IsNullOrWhiteSpace(Triage.CustomerSummary))
         {
-            <div class="small text-secondary border-top pt-2 mt-2">Customer-facing summary: "@Triage.CustomerSummary"</div>
+            <div class="small text-secondary border-top pt-2 mt-3">Told the customer: "@Triage.CustomerSummary"</div>
         }
     </div>
 </div>

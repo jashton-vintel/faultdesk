@@ -7,19 +7,19 @@
 @inject MarkdownRenderer Markdown
 @inject ILogger<InvestigationPanel> Logger
 
-<div class="card shadow-sm mb-3">
+<div class="card mb-3">
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h2 class="h5 mb-0">AI Investigate</h2>
+            <div>
+                <div class="section-label pink">AI Investigate</div>
+                <div class="small text-secondary">
+                    Searches the web for matching faults on this car and drafts a plan from the description, triage and related tickets. A starting point for a technician, not a diagnosis.
+                </div>
+            </div>
             <button type="button" class="btn btn-primary btn-sm" @onclick="RunAsync" disabled="@_running">
-                @(_running ? "Investigating..." : Latest is null ? "AI Investigate" : "Run again")
+                @(_running ? "Investigating..." : Latest is null ? "Investigate" : "Run again")
             </button>
         </div>
-        <p class="small text-secondary">
-            Builds a prompt from the vehicle, the customer's words, the triage and the related tickets, asks the model to
-            search the web for matching faults on this car, and streams back a plan for the workshop. It is a starting
-            point for a technician, not a diagnosis.
-        </p>
 
         @if (_error is not null)
         {
@@ -29,10 +29,10 @@
         @if (_running)
         {
             <div class="small text-secondary mb-2">
-                <span class="spinner-border spinner-border-sm me-1"></span>
+                <span class="spinner-border spinner-border-sm text-pink me-1"></span>
                 Working&hellip; @(_stopwatch?.Elapsed.TotalSeconds.ToString("F0"))s
             </div>
-            <div class="report-markdown">@Markdown.ToHtml(_streamed.ToString())</div>
+            <div class="report-markdown streaming">@Markdown.ToHtml(_streamed.ToString())</div>
         }
         else if (Latest is { } latest)
         {
@@ -41,14 +41,14 @@
         }
         else
         {
-            <p class="text-secondary small mb-0">No investigation yet.</p>
+            <div class="text-secondary small border-top pt-3">No investigation yet. Run one when the car is booked in, or now to prepare.</div>
         }
 
         @if (_history.Count > 1)
         {
             <details class="mt-3">
                 <summary class="small text-secondary">Previous runs (@(_history.Count - 1))</summary>
-                <ul class="small mb-0 mt-2">
+                <ul class="small mb-0 mt-2 ps-3">
                     @foreach (var run in _history.Skip(1))
                     {
                         <li>@Provenance(run)</li>

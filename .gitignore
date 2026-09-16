@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 .env
 .env.*
 !.env.example
+
+# Playwright MCP output (screenshots, snapshots)
+.playwright-mcp/

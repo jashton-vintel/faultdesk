@@ -7,13 +7,14 @@
 
 <PageTitle>Report a problem - FaultDesk</PageTitle>
 
+<div class="section-label pink">Customer portal</div>
 <h1 class="h3 mb-3">Report a problem with your car</h1>
 
 <ol class="stepper mb-4">
-    <li class="@StepClass(Step.Registration)">1. Your registration</li>
-    <li class="@StepClass(Step.Vehicle)">2. Your vehicle</li>
-    <li class="@StepClass(Step.Problem)">3. The problem</li>
-    <li class="@StepClass(Step.Questions)">4. Quick questions</li>
+    <li class="@StepClass(Step.Registration)">Your registration</li>
+    <li class="@StepClass(Step.Vehicle)">Your vehicle</li>
+    <li class="@StepClass(Step.Problem)">The problem</li>
+    <li class="@StepClass(Step.Questions)">Quick questions</li>
 </ol>
 
 @if (_error is not null)
@@ -24,7 +25,7 @@
 @switch (_step)
 {
     case Step.Registration:
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-body">
                 <label class="form-label" for="registration">Registration number</label>
                 <div class="input-group input-group-lg mb-2">
@@ -56,7 +57,7 @@
     case Step.Vehicle:
         <EditForm Model="_vehicle" OnValidSubmit="ContinueToProblem">
             <DataAnnotationsValidator />
-            <div class="card shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="alert @(_foundVehicle ? "alert-success" : "alert-warning") py-2">@_lookupMessage</div>
                     <div class="row g-3">
@@ -115,7 +116,7 @@
     case Step.Problem:
         <EditForm Model="_problem" OnValidSubmit="ContinueToQuestionsAsync">
             <DataAnnotationsValidator />
-            <div class="card shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <p class="text-secondary mb-3"><span class="font-monospace">@_registration?.Display</span> &middot; @_vehicle.Summary</p>
                     <label class="form-label" for="description">What's the problem?</label>
@@ -136,7 +137,7 @@
         break;
 
     case Step.Questions:
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-body">
                 <h2 class="h5">A couple of quick questions</h2>
                 <p class="text-secondary">These help the workshop prepare. Answer what you can, or skip them.</p>

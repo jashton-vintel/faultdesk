@@ -2,33 +2,49 @@
 
 <PageTitle>FaultDesk</PageTitle>
 
-<div class="text-center my-5">
-    <h1 class="display-5 fw-semibold">FaultDesk</h1>
-    <p class="lead text-secondary mb-0">Turns "it makes a funny noise" into something the workshop can act on.</p>
-</div>
+<section class="fd-hero mb-4">
+    <div class="section-label mb-2" style="color: var(--fd-pink-100);">Garage fault triage</div>
+    <h1>Turn <span class="accent">"it makes a funny noise"</span><br />into a job the workshop can start.</h1>
+    <p class="mb-0 mt-3">
+        Customers describe the problem in their own words. FaultDesk finds the vehicle, asks the right follow-up
+        questions, triages the fault, surfaces similar faults the garage has already fixed and drafts an investigation plan.
+    </p>
+</section>
 
-<div class="row g-4 justify-content-center">
-    <div class="col-md-5">
-        <div class="card h-100 shadow-sm portal-card">
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100 portal-card">
             <div class="card-body d-flex flex-column">
-                <h2 class="h4">I'm a customer</h2>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="icon">C</div>
+                    <div>
+                        <div class="section-label pink">For customers</div>
+                        <h2 class="h5 mb-0">Report a problem</h2>
+                    </div>
+                </div>
                 <p class="text-secondary flex-grow-1">
-                    Tell us your registration and describe the problem in your own words. We'll find your vehicle and pass
-                    everything to the garage.
+                    Enter your registration, check the vehicle we find, tell us what's wrong and answer a couple of
+                    quick questions. Takes about a minute.
                 </p>
-                <a class="btn btn-primary" href="customer/report">Report a problem</a>
+                <a class="btn btn-primary align-self-start" href="customer/report">Start a report</a>
             </div>
         </div>
     </div>
-    <div class="col-md-5">
-        <div class="card h-100 shadow-sm portal-card">
+    <div class="col-md-6">
+        <div class="card h-100 portal-card">
             <div class="card-body d-flex flex-column">
-                <h2 class="h4">Garage portal</h2>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="icon">G</div>
+                    <div>
+                        <div class="section-label pink">For the workshop</div>
+                        <h2 class="h5 mb-0">Garage portal</h2>
+                    </div>
+                </div>
                 <p class="text-secondary flex-grow-1">
-                    Every ticket in one place, with the vehicle's history, similar faults the workshop has seen before and an
-                    AI-generated investigation plan.
+                    Every ticket with its triage, the vehicle's history, similar faults you've seen before and an
+                    AI-generated investigation plan, all on one screen.
                 </p>
-                <a class="btn btn-outline-dark" href="garage">Open the garage portal</a>
+                <a class="btn btn-dark align-self-start" href="garage">Open the garage portal</a>
             </div>
         </div>
     </div>

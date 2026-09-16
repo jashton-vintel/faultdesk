@@ -3,7 +3,7 @@ using FaultDesk.Domain.Vehicles;
 
 namespace FaultDesk.Web;
 
-/// <summary>Human-friendly labels and Bootstrap colours for domain enums, shared by both portals.</summary>
+/// <summary>Human-friendly labels and pill styles for domain enums, shared by both portals.</summary>
 public static class Display
 {
     public static string Category(FaultCategory category) => category switch
@@ -20,38 +20,39 @@ public static class Display
         _ => status.ToString(),
     };
 
-    public static string StatusColour(TicketStatus status) => status switch
+    public static string StatusPill(TicketStatus status) => status switch
     {
-        TicketStatus.New => "primary",
-        TicketStatus.InProgress => "warning text-dark",
-        TicketStatus.Resolved => "success",
-        _ => "secondary",
+        TicketStatus.New => "pill-blue",
+        TicketStatus.InProgress => "pill-amber",
+        TicketStatus.Resolved => "pill-green",
+        _ => "pill-grey",
     };
 
-    public static string Severity(Severity severity) => severity == Domain.Tickets.Severity.Unknown ? "Unrated" : severity.ToString();
+    public static string Severity(Severity severity) =>
+        severity == Domain.Tickets.Severity.Unknown ? "Unrated" : $"{severity} severity";
 
-    public static string SeverityColour(Severity severity) => severity switch
+    public static string SeverityPill(Severity severity) => severity switch
     {
-        Domain.Tickets.Severity.High => "danger",
-        Domain.Tickets.Severity.Medium => "warning text-dark",
-        Domain.Tickets.Severity.Low => "success",
-        _ => "secondary",
+        Domain.Tickets.Severity.High => "pill-red",
+        Domain.Tickets.Severity.Medium => "pill-amber",
+        Domain.Tickets.Severity.Low => "pill-green",
+        _ => "pill-grey",
     };
 
     public static string SafeToDrive(SafeToDrive safeToDrive) => safeToDrive switch
     {
-        Domain.Tickets.SafeToDrive.Yes => "Should be safe to drive",
+        Domain.Tickets.SafeToDrive.Yes => "Safe to drive",
         Domain.Tickets.SafeToDrive.Caution => "Drive with caution",
         Domain.Tickets.SafeToDrive.No => "Do not drive",
         _ => "Not assessed",
     };
 
-    public static string SafeToDriveColour(SafeToDrive safeToDrive) => safeToDrive switch
+    public static string SafeToDrivePill(SafeToDrive safeToDrive) => safeToDrive switch
     {
-        Domain.Tickets.SafeToDrive.Yes => "success",
-        Domain.Tickets.SafeToDrive.Caution => "warning text-dark",
-        Domain.Tickets.SafeToDrive.No => "danger",
-        _ => "secondary",
+        Domain.Tickets.SafeToDrive.Yes => "pill-green",
+        Domain.Tickets.SafeToDrive.Caution => "pill-amber",
+        Domain.Tickets.SafeToDrive.No => "pill-red",
+        _ => "pill-grey",
     };
 
     public static string Fuel(FuelType fuel) => fuel switch
@@ -63,4 +64,6 @@ public static class Display
     };
 
     public static string LocalTime(DateTimeOffset value) => value.ToLocalTime().ToString("d MMM yyyy HH:mm");
+
+    public static string LocalDate(DateTimeOffset value) => value.ToLocalTime().ToString("d MMM yyyy");
 }

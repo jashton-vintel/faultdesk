@@ -3,16 +3,9 @@
 
 <PageTitle>@(_detail is null ? "Ticket" : _detail.Ticket.Reference) - FaultDesk</PageTitle>
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a href="garage">Tickets</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@(_detail?.Ticket.Reference ?? "...")</li>
-    </ol>
-</nav>
-
 @if (_loading)
 {
-    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm"></span> Loading ticket...</div>
+    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm text-pink"></span> Loading ticket...</div>
 }
 else if (_error is not null)
 {
@@ -26,63 +19,79 @@ else
 {
     var ticket = _detail.Ticket;
 
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-        <div>
-            <h1 class="h3 mb-1">@ticket.Headline</h1>
-            <div class="text-secondary">
-                <span class="font-monospace">@ticket.Reference</span> &middot; received @Display.LocalTime(ticket.CreatedAt)
-                @if (ticket.CustomerName is not null)
-                {
-                    <text> &middot; @ticket.CustomerName</text>
-                }
-                @if (ticket.CustomerContact is not null)
-                {
-                    <text> (@ticket.CustomerContact)</text>
-                }
-            </div>
-        </div>
-        <StatusBadge Status="ticket.Status" />
+    <div class="d-flex align-items-center gap-2 small mb-2">
+        <a href="garage" class="text-secondary">Tickets</a>
+        <span class="text-secondary">/</span>
+        <span class="font-monospace">@ticket.Reference</span>
     </div>
 
-    <div class="row g-3">
-        <div class="col-lg-7">
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <span class="reg-plate px-2 py-1 rounded fs-5">@ticket.Registration.Display</span>
-                        <div>
-                            <div class="fw-semibold">@ticket.Vehicle.Year @ticket.Vehicle.Make @ticket.Vehicle.Model @ticket.Vehicle.Variant</div>
-                            <div class="small text-secondary">
-                                @(ticket.Vehicle.EngineSizeCc is { } cc ? $"{cc}cc" : "Engine size unknown") &middot; @Display.Fuel(ticket.Vehicle.FuelType)
-                            </div>
-                        </div>
+    @* Everything an adviser needs at a glance: what, which car, how urgent, and what to do next. *@
+    <div class="ticket-header mb-3">
+            <div class="d-flex align-items-start gap-3">
+                <span class="reg-plate fs-5 mt-1">@ticket.Registration.Display</span>
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h1 class="h4 mb-0">@ticket.Headline</h1>
+                        <StatusBadge Status="ticket.Status" />
                     </div>
-                    <h2 class="h6 text-secondary text-uppercase">Customer's description</h2>
-                    <p class="mb-0" style="white-space: pre-line;">@ticket.Description</p>
+                    <div class="text-secondary small mt-1">
+                        @ticket.Vehicle.Summary
+                        &middot; received @Display.LocalTime(ticket.CreatedAt)
+                        @if (ticket.CustomerName is not null)
+                        {
+                            <text> &middot; @ticket.CustomerName</text>
+                        }
+                        @if (ticket.CustomerContact is not null)
+                        {
+                            <text> (@ticket.CustomerContact)</text>
+                        }
+                    </div>
+                    @if (ticket.Triage is { } triage)
+                    {
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="pill pill-grey no-dot">@Display.Category(triage.Category)</span>
+                            <SeverityBadge Severity="triage.Severity" />
+                            <span class="pill @Display.SafeToDrivePill(triage.SafeToDrive)">@Display.SafeToDrive(triage.SafeToDrive)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <StatusActions Ticket="ticket" OnChanged="LoadAsync" />
+    </div>
+
+    <div class="ticket-grid">
+        <div class="area-a">
+            @if (ticket.Resolution is { } resolution)
+            {
+                <div class="card tint-green mb-3">
+                    <div class="card-body">
+                        <div class="section-label mb-1" style="color: #0a7a52;">Resolution &middot; @Display.LocalTime(resolution.ResolvedAt)</div>
+                        <p class="mb-0 pre-line">@resolution.Notes</p>
+                    </div>
+                </div>
+            }
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="section-label mb-2">Customer's description</div>
+                    <p class="mb-0 pre-line">@ticket.Description</p>
                 </div>
             </div>
 
-            @if (ticket.Triage is { } triage)
+            @if (ticket.Triage is { } triageDetail)
             {
-                <TriageCard Triage="triage" />
+                <TriageCard Triage="triageDetail" />
             }
-
-            @if (ticket.Resolution is { } resolution)
-            {
-                <div class="card shadow-sm mb-3 border-success">
-                    <div class="card-body">
-                        <h2 class="h6 text-success text-uppercase">Resolution &middot; @Display.LocalTime(resolution.ResolvedAt)</h2>
-                        <p class="mb-0" style="white-space: pre-line;">@resolution.Notes</p>
-                    </div>
-                </div>
-            }
-
-            <InvestigationPanel TicketId="ticket.Id" Investigations="_detail.Investigations" />
         </div>
 
-        <div class="col-lg-5">
-            <StatusActions Ticket="ticket" OnChanged="LoadAsync" />
-            <RelatedTickets History="_detail.VehicleHistory" Similar="_detail.SimilarTickets" />
+        <div class="area-b">
+            <div class="ticket-rail">
+                <RelatedTickets History="_detail.VehicleHistory" Similar="_detail.SimilarTickets" />
+            </div>
+        </div>
+
+        <div class="area-c">
+            <InvestigationPanel TicketId="ticket.Id" Investigations="_detail.Investigations" />
         </div>
     </div>
 }

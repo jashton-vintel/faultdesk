@@ -5,7 +5,7 @@
 
 @if (_loading)
 {
-    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm"></span> Loading your report...</div>
+    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm text-pink"></span> Loading your report...</div>
 }
 else if (_ticket is null)
 {
@@ -13,54 +13,59 @@ else if (_ticket is null)
 }
 else
 {
-    <div class="alert alert-success shadow-sm">
-        <h1 class="h4">Thanks, we've got it</h1>
-        <p class="mb-0">
-            Your reference is <strong class="font-monospace">@_ticket.Reference</strong>. A service adviser will review your report
-            and get in touch to book the car in.
-        </p>
+    <div class="card tint-pink mb-3">
+        <div class="card-body py-4">
+            <div class="section-label pink mb-1">Report received</div>
+            <h1 class="h3">Thanks, we've got it.</h1>
+            <p class="mb-0">
+                Your reference is <span class="pill pill-dark no-dot font-monospace">@_ticket.Reference</span>.
+                A service adviser will review your report and get in touch to book the car in.
+            </p>
+        </div>
     </div>
 
-    @if (_ticket.Triage is { } triage)
-    {
-        <div class="card shadow-sm mb-3">
-            <div class="card-body">
-                <h2 class="h5">What we understood</h2>
-                @if (!string.IsNullOrWhiteSpace(triage.CustomerSummary))
-                {
-                    <p>@triage.CustomerSummary</p>
-                }
-                <p class="mb-0">
-                    <span class="badge bg-@Display.SafeToDriveColour(triage.SafeToDrive) me-1">@Display.SafeToDrive(triage.SafeToDrive)</span>
-                    <span class="small text-secondary">
-                        @(triage.SafeToDrive switch
+    <div class="row g-3">
+        @if (_ticket.Triage is { } triage)
+        {
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="section-label mb-2">What we understood</div>
+                        @if (!string.IsNullOrWhiteSpace(triage.CustomerSummary))
                         {
-                            SafeToDrive.No => "Please don't drive the car until it has been checked; we'll call you to arrange recovery or a priority booking.",
-                            SafeToDrive.Caution => "Keep journeys short and gentle until we've looked at it. If it gets worse, stop driving and call us.",
-                            SafeToDrive.Yes => "Nothing in your description suggests it's unsafe to drive, but do get it looked at soon.",
-                            _ => "We'll assess how urgent this is when we review your report.",
-                        })
-                    </span>
-                </p>
+                            <p>@triage.CustomerSummary</p>
+                        }
+                        <span class="pill @Display.SafeToDrivePill(triage.SafeToDrive) mb-2">@Display.SafeToDrive(triage.SafeToDrive)</span>
+                        <p class="small text-secondary mb-0">
+                            @(triage.SafeToDrive switch
+                            {
+                                SafeToDrive.No => "Please don't drive the car until it has been checked; we'll call you to arrange recovery or a priority booking.",
+                                SafeToDrive.Caution => "Keep journeys short and gentle until we've looked at it. If it gets worse, stop driving and call us.",
+                                SafeToDrive.Yes => "Nothing in your description suggests it's unsafe to drive, but do get it looked at soon.",
+                                _ => "We'll assess how urgent this is when we review your report.",
+                            })
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="@(_ticket.Triage is null ? "col-12" : "col-md-6")">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="section-label mb-2">What you told us</div>
+                    <div class="mb-2">
+                        <span class="reg-plate sm">@_ticket.Registration.Display</span>
+                        <span class="ms-1 small text-secondary">@_ticket.Vehicle.Summary</span>
+                    </div>
+                    <p class="pre-line mb-2">@_ticket.Description</p>
+                    <div class="small text-secondary">Received @Display.LocalTime(_ticket.CreatedAt)</div>
+                </div>
             </div>
         </div>
-    }
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-body">
-            <h2 class="h5">What you told us</h2>
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Vehicle</dt>
-                <dd class="col-sm-9"><span class="font-monospace">@_ticket.Registration.Display</span> &middot; @_ticket.Vehicle.Summary</dd>
-                <dt class="col-sm-3">Problem</dt>
-                <dd class="col-sm-9" style="white-space: pre-line;">@_ticket.Description</dd>
-                <dt class="col-sm-3">Received</dt>
-                <dd class="col-sm-9">@_ticket.CreatedAt.ToLocalTime().ToString("d MMM yyyy HH:mm")</dd>
-            </dl>
-        </div>
     </div>
 
-    <a class="btn btn-outline-primary" href="customer/report">Report another problem</a>
+    <a class="btn btn-outline-primary mt-3" href="customer/report">Report another problem</a>
 }
 
 @code {

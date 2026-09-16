@@ -1,75 +1,102 @@
-@* Previous tickets that matter for this one: the same vehicle's history and semantically similar faults from any vehicle. *@
+@* Previous tickets that matter for this one, in a tabbed rail so they are visible without scrolling. *@
 
-<div class="card shadow-sm h-100">
+<div class="card">
     <div class="card-body">
-        <h2 class="h5">This vehicle's history</h2>
-        @if (History.Count == 0)
-        {
-            <p class="text-secondary small mb-0">No previous tickets for this registration.</p>
-        }
-        else
-        {
-            <ul class="list-unstyled mb-0">
-                @foreach (var item in History)
-                {
-                    <li class="border-top py-2">
-                        @RenderItem(item)
-                    </li>
-                }
-            </ul>
-        }
-    </div>
-</div>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="section-label">Related tickets</div>
+            <span class="small text-secondary">newest first</span>
+        </div>
 
-<div class="card shadow-sm h-100 mt-3">
-    <div class="card-body">
-        <h2 class="h5">Similar faults we've seen</h2>
-        <p class="text-secondary small">Found by comparing the meaning of the descriptions (vector search), not just the words.</p>
-        @if (Similar.Count == 0)
-        {
-            <p class="text-secondary small mb-0">Nothing similar yet. Similar tickets appear here as the garage builds up history.</p>
-        }
-        else
-        {
-            <ul class="list-unstyled mb-0">
-                @foreach (var item in Similar)
+        <div class="fd-tabs">
+            <button type="button" class="@(_tab == Tab.Similar ? "active" : "")" @onclick="() => Select(Tab.Similar)">
+                Similar faults<span class="count">@Similar.Count</span>
+            </button>
+            <button type="button" class="@(_tab == Tab.History ? "active" : "")" @onclick="() => Select(Tab.History)">
+                This vehicle<span class="count">@History.Count</span>
+            </button>
+        </div>
+
+        <div class="rail-list">
+            @if (_tab == Tab.Similar)
+            {
+                <p class="small text-secondary mb-2">Found by comparing the meaning of the descriptions and fixes (vector search), not just the words.</p>
+                @if (Similar.Count == 0)
                 {
-                    <li class="border-top py-2">
-                        @RenderItem(item)
-                    </li>
+                    <p class="text-secondary small mb-0">Nothing similar yet. Matches appear here as the garage builds up history.</p>
                 }
-            </ul>
-        }
+                else
+                {
+                    foreach (var item in Similar)
+                    {
+                        @RenderItem(item)
+                    }
+                }
+            }
+            else
+            {
+                @if (History.Count == 0)
+                {
+                    <p class="text-secondary small mb-0">No previous tickets for this registration.</p>
+                }
+                else
+                {
+                    foreach (var item in History)
+                    {
+                        @RenderItem(item)
+                    }
+                }
+            }
+        </div>
     </div>
 </div>
 
 @code {
+    private enum Tab { Similar, History }
+
     [Parameter, EditorRequired]
     public IReadOnlyList<RelatedTicket> History { get; set; } = [];
 
     [Parameter, EditorRequired]
     public IReadOnlyList<RelatedTicket> Similar { get; set; } = [];
 
+    private Tab _tab = Tab.Similar;
+    private bool _userChoseTab;
+
+    protected override void OnParametersSet()
+    {
+        if (!_userChoseTab)
+        {
+            _tab = Similar.Count == 0 && History.Count > 0 ? Tab.History : Tab.Similar;
+        }
+    }
+
+    private void Select(Tab tab)
+    {
+        _tab = tab;
+        _userChoseTab = true;
+    }
+
     private RenderFragment RenderItem(RelatedTicket item) => __builder =>
     {
-        <div class="d-flex justify-content-between align-items-start gap-2">
-            <div>
-                <a href="garage/tickets/@item.Id.Value" class="fw-semibold">@item.Headline</a>
-                <div class="small text-secondary">
-                    <span class="font-monospace">@item.Reference</span> &middot; @item.Registration &middot; @item.Vehicle &middot; @item.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+        <div class="related-item">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <a href="garage/tickets/@item.Id.Value" class="fw-semibold text-body">@item.Headline</a>
+                <div class="d-flex gap-1 flex-shrink-0">
+                    @if (item.Similarity is { } similarity)
+                    {
+                        <span class="pill pill-pink no-dot" title="Cosine similarity of the two tickets">@similarity.ToString("P0")</span>
+                    }
+                    <StatusBadge Status="item.Status" />
                 </div>
             </div>
-            <div class="text-nowrap">
-                @if (item.Similarity is { } similarity)
-                {
-                    <span class="badge bg-info text-dark me-1" title="Cosine similarity of the two descriptions">@similarity.ToString("P0") match</span>
-                }
-                <StatusBadge Status="item.Status" />
+            <div class="small text-secondary mt-1">
+                <span class="reg-plate sm">@item.Registration</span>
+                <span class="ms-1">@item.Vehicle &middot; @Display.LocalDate(item.CreatedAt)</span>
             </div>
+            @if (item.ResolutionNotes is not null)
+            {
+                <div class="fixed-by clamp-2" title="@item.ResolutionNotes"><span class="fw-semibold" style="color: #0a7a52;">Fixed by:</span> @item.ResolutionNotes</div>
+            }
         </div>
-        @if (item.ResolutionNotes is not null)
-        {
-            <div class="small mt-1"><span class="text-success fw-semibold">Fixed by:</span> @item.ResolutionNotes</div>
-        }
     };
 }

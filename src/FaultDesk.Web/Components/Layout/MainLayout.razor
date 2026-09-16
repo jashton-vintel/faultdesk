@@ -1,16 +1,31 @@
 @inherits LayoutComponentBase
+@inject FaultDesk.Infrastructure.Ai.AiOptions Ai
 
-<nav class="navbar navbar-expand navbar-dark bg-dark px-3">
-    <a class="navbar-brand fw-semibold" href="">FaultDesk</a>
-    <div class="navbar-nav">
-        <NavLink class="nav-link" href="customer/report">Customer</NavLink>
-        <NavLink class="nav-link" href="garage">Garage</NavLink>
+<nav class="navbar navbar-expand fd-nav">
+    <div class="container-xl">
+        <a class="fd-brand navbar-brand" href="">
+            <span class="dot"></span>faultdesk<span class="stop">.</span>
+        </a>
+        <div class="navbar-nav me-auto">
+            <NavLink class="nav-link" href="customer/report">Customer</NavLink>
+            <NavLink class="nav-link" href="garage">Garage</NavLink>
+        </div>
+        <span class="pill @(Ai.IsMockChat ? "pill-grey" : "pill-pink")" title="Ai:ChatProvider / Ai:EmbeddingProvider">
+            AI: @Ai.ChatProvider@(Ai.IsMockChat ? " (demo)" : "")
+        </span>
     </div>
 </nav>
 
-<main class="container py-4" style="max-width: 1100px;">
+<main class="container-xl py-4">
     @Body
 </main>
+
+<footer class="fd-footer mt-5">
+    <div class="container-xl py-3 d-flex flex-wrap justify-content-between gap-2">
+        <span>FaultDesk &middot; garage fault triage</span>
+        <span>.NET 10 &middot; Blazor Server &middot; SQL Server 2025 vector search &middot; Claude</span>
+    </div>
+</footer>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

@@ -3,16 +3,14 @@
 
 <PageTitle>Tickets - FaultDesk</PageTitle>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 mb-0">Tickets</h1>
-    <div class="d-flex gap-2 align-items-center">
-        <select class="form-select form-select-sm w-auto" @bind="_statusFilter" aria-label="Filter by status">
-            <option value="">All statuses</option>
-            @foreach (var status in Enum.GetValues<TicketStatus>())
-            {
-                <option value="@status">@Display.Status(status)</option>
-            }
-        </select>
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+        <div class="section-label pink">Garage portal</div>
+        <h1 class="h3 mb-0">Tickets</h1>
+    </div>
+    <div class="d-flex gap-2">
+        <input class="form-control form-control-sm" style="min-width: 17rem;" placeholder="Search registration, vehicle or fault"
+               aria-label="Search tickets" @bind="_search" @bind:event="oninput" />
         <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="LoadAsync" disabled="@_loading">Refresh</button>
     </div>
 </div>
@@ -22,51 +20,103 @@
     <div class="alert alert-danger">@_error</div>
 }
 
+<div class="row g-2 mb-3">
+    @foreach (var tile in Tiles)
+    {
+        <div class="col-6 col-md-3">
+            <button type="button" class="stat @(tile.Status == _statusFilter ? "active" : "")" @onclick="() => _statusFilter = tile.Status">
+                <div class="section-label">@tile.Label</div>
+                <div class="value">@tile.Count</div>
+            </button>
+        </div>
+    }
+</div>
+
 @if (_loading)
 {
-    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm"></span> Loading tickets...</div>
+    <div class="d-flex align-items-center gap-2 text-secondary"><span class="spinner-border spinner-border-sm text-pink"></span> Loading tickets...</div>
 }
 else if (_tickets.Count == 0)
 {
-    <div class="alert alert-light border">No tickets yet. Submit one from the <a href="customer/report">customer portal</a>.</div>
+    <div class="card"><div class="card-body text-secondary">No tickets yet. Submit one from the <a href="customer/report">customer portal</a>.</div></div>
 }
 else
 {
-    <div class="table-responsive">
-        <QuickGrid Items="Filtered" Class="table table-hover align-middle" Pagination="_pagination">
-            <TemplateColumn Title="Received" Sortable="true" SortBy="GridSort<TicketSummary>.ByDescending(t => t.CreatedAt)"
-                            IsDefaultSortColumn="true" InitialSortDirection="SortDirection.Ascending">
-                <span class="text-nowrap">@context.CreatedAt.ToLocalTime().ToString("d MMM HH:mm")</span>
-            </TemplateColumn>
-            <PropertyColumn Property="t => t.Registration" Title="Reg" Sortable="true" Class="font-monospace text-nowrap" />
-            <PropertyColumn Property="t => t.Vehicle" Title="Vehicle" Sortable="true" />
-            <TemplateColumn Title="Fault" Sortable="true" SortBy="GridSort<TicketSummary>.ByAscending(t => t.Headline)">
-                <a href="garage/tickets/@context.Id.Value" class="fw-semibold">@context.Headline</a>
-                <div class="small text-secondary">@Display.Category(context.Category) &middot; <span class="font-monospace">@context.Reference</span></div>
-            </TemplateColumn>
-            <TemplateColumn Title="Severity" Sortable="true" SortBy="GridSort<TicketSummary>.ByDescending(t => t.Severity)">
-                <SeverityBadge Severity="context.Severity" />
-            </TemplateColumn>
-            <TemplateColumn Title="Status" Sortable="true" SortBy="GridSort<TicketSummary>.ByAscending(t => t.Status)">
-                <StatusBadge Status="context.Status" />
-            </TemplateColumn>
-        </QuickGrid>
+    <div class="card">
+        <div class="table-responsive">
+            <QuickGrid Items="Filtered" Class="table fd-table" Pagination="_pagination">
+                <TemplateColumn Title="Received" Sortable="true" SortBy="GridSort<TicketSummary>.ByDescending(t => t.CreatedAt)"
+                                IsDefaultSortColumn="true" InitialSortDirection="SortDirection.Ascending">
+                    <div class="text-nowrap">@context.CreatedAt.ToLocalTime().ToString("d MMM")</div>
+                    <div class="small text-secondary">@context.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
+                </TemplateColumn>
+                <TemplateColumn Title="Vehicle" Sortable="true" SortBy="GridSort<TicketSummary>.ByAscending(t => t.Vehicle)">
+                    <span class="reg-plate sm">@context.Registration</span>
+                    <div class="small text-secondary mt-1">@context.Vehicle</div>
+                </TemplateColumn>
+                <TemplateColumn Title="Fault" Sortable="true" SortBy="GridSort<TicketSummary>.ByAscending(t => t.Headline)">
+                    <a href="garage/tickets/@context.Id.Value" class="fw-semibold text-body">@context.Headline</a>
+                    <div class="small text-secondary">@Display.Category(context.Category) &middot; <span class="font-monospace">@context.Reference</span></div>
+                </TemplateColumn>
+                <TemplateColumn Title="Severity" Sortable="true" SortBy="GridSort<TicketSummary>.ByDescending(t => t.Severity)">
+                    <SeverityBadge Severity="context.Severity" />
+                </TemplateColumn>
+                <TemplateColumn Title="Status" Sortable="true" SortBy="GridSort<TicketSummary>.ByAscending(t => t.Status)">
+                    <StatusBadge Status="context.Status" />
+                </TemplateColumn>
+                <TemplateColumn Title="" Align="Align.End">
+                    <a class="btn btn-sm btn-outline-primary" href="garage/tickets/@context.Id.Value">Open</a>
+                </TemplateColumn>
+            </QuickGrid>
+        </div>
+        <div class="card-body py-2 border-top">
+            <Paginator State="_pagination" />
+        </div>
     </div>
-    <Paginator State="_pagination" />
 }
 
 @code {
-    private readonly PaginationState _pagination = new() { ItemsPerPage = 15 };
+    private sealed record Tile(string Label, TicketStatus? Status, int Count);
+
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 12 };
     private IReadOnlyList<TicketSummary> _tickets = [];
-    private string _statusFilter = string.Empty;
+    private TicketStatus? _statusFilter;
+    private string _search = string.Empty;
     private bool _loading = true;
     private string? _error;
 
-    private IQueryable<TicketSummary> Filtered =>
-        (Enum.TryParse<TicketStatus>(_statusFilter, out var status)
-            ? _tickets.Where(t => t.Status == status)
-            : _tickets)
-        .AsQueryable();
+    private IEnumerable<Tile> Tiles =>
+    [
+        new("All tickets", null, _tickets.Count),
+        new("New", TicketStatus.New, _tickets.Count(t => t.Status == TicketStatus.New)),
+        new("In progress", TicketStatus.InProgress, _tickets.Count(t => t.Status == TicketStatus.InProgress)),
+        new("Resolved", TicketStatus.Resolved, _tickets.Count(t => t.Status == TicketStatus.Resolved)),
+    ];
+
+    private IQueryable<TicketSummary> Filtered
+    {
+        get
+        {
+            var query = _tickets.AsEnumerable();
+            if (_statusFilter is { } status)
+            {
+                query = query.Where(t => t.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var term = _search.Trim();
+                query = query.Where(t =>
+                    t.Registration.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || t.Registration.Replace(" ", "").Contains(term.Replace(" ", ""), StringComparison.OrdinalIgnoreCase)
+                    || t.Vehicle.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || t.Headline.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || t.Reference.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query.AsQueryable();
+        }
+    }
 
     protected override Task OnInitializedAsync() => LoadAsync();
 

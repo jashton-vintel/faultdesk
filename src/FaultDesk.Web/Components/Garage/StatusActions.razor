@@ -1,45 +1,46 @@
 @inject TicketWorkflowHandler Workflow
 @inject ILogger<StatusActions> Logger
 
-<div class="card shadow-sm mb-3">
-    <div class="card-body">
-        <h2 class="h5">Workflow</h2>
-
-        @if (_error is not null)
+@* Renders two siblings so the ticket header grid can place the buttons top-right and the resolve form full-width below. *@
+<div class="ticket-actions d-flex flex-wrap gap-2 align-items-start justify-content-lg-end">
+        @switch (Ticket.Status)
         {
-            <div class="alert alert-danger py-2">@_error</div>
+            case TicketStatus.New:
+                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="StartAsync" disabled="@_busy">Start work</button>
+                <button type="button" class="btn btn-primary btn-sm" @onclick="() => _resolving = !_resolving" disabled="@_busy">Resolve</button>
+                break;
+            case TicketStatus.InProgress:
+                <button type="button" class="btn btn-primary btn-sm" @onclick="() => _resolving = !_resolving" disabled="@_busy">Resolve</button>
+                break;
+            case TicketStatus.Resolved:
+                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ReopenAsync" disabled="@_busy">Reopen</button>
+                break;
         }
-
-        @if (_resolving)
-        {
-            <label class="form-label" for="resolution-notes">What did the workshop find and do?</label>
-            <textarea id="resolution-notes" class="form-control mb-2" rows="4" @bind="_notes" disabled="@_busy"
-                      placeholder="e.g. Front discs lipped and pads worn to the metal. Replaced discs and pads, bled brakes, road tested."></textarea>
-            <div class="form-text mb-2">These notes are embedded with the ticket, so the next similar fault will surface this fix.</div>
-            <button type="button" class="btn btn-success btn-sm" @onclick="ResolveAsync" disabled="@_busy">@(_busy ? "Saving..." : "Save resolution")</button>
-            <button type="button" class="btn btn-link btn-sm" @onclick="() => _resolving = false" disabled="@_busy">Cancel</button>
-        }
-        else
-        {
-            switch (Ticket.Status)
-            {
-                case TicketStatus.New:
-                    <p class="small text-secondary">New ticket. Start work once the car is booked in, or resolve it straight away.</p>
-                    <button type="button" class="btn btn-outline-primary btn-sm" @onclick="StartAsync" disabled="@_busy">Start work</button>
-                    <button type="button" class="btn btn-outline-success btn-sm ms-1" @onclick="() => _resolving = true" disabled="@_busy">Resolve</button>
-                    break;
-                case TicketStatus.InProgress:
-                    <p class="small text-secondary">Work in progress. Record what fixed it when you are done.</p>
-                    <button type="button" class="btn btn-success btn-sm" @onclick="() => _resolving = true" disabled="@_busy">Resolve</button>
-                    break;
-                case TicketStatus.Resolved:
-                    <p class="small text-secondary">Resolved. Reopen if the customer comes back with the same problem.</p>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ReopenAsync" disabled="@_busy">Reopen</button>
-                    break;
-            }
-        }
-    </div>
 </div>
+
+@if (_error is not null || _resolving)
+{
+    <div class="ticket-resolve">
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger py-2 mb-2 small">@_error</div>
+    }
+
+    @if (_resolving)
+    {
+        <div class="card tint-green">
+            <div class="card-body py-3">
+                <label class="form-label small" for="resolution-notes">What did the workshop find and do?</label>
+                <textarea id="resolution-notes" class="form-control form-control-sm mb-2" rows="3" @bind="_notes" disabled="@_busy"
+                          placeholder="e.g. Front discs lipped and pads worn to the metal. Replaced discs and pads, bled brakes, road tested."></textarea>
+                <div class="form-text mb-2">Embedded with the ticket, so the next similar fault surfaces this fix.</div>
+                <button type="button" class="btn btn-success btn-sm" @onclick="ResolveAsync" disabled="@_busy">@(_busy ? "Saving..." : "Save resolution")</button>
+                <button type="button" class="btn btn-link btn-sm" @onclick="() => _resolving = false" disabled="@_busy">Cancel</button>
+            </div>
+        </div>
+    }
+    </div>
+}
 
 @code {
     [Parameter, EditorRequired]
